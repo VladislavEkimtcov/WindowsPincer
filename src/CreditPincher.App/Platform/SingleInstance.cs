@@ -1,79 +1,93 @@
-namespace CreditPincher.App.Platform;
+using System;
+using System.Threading;
 
-/// <summary>
-/// Keeps exactly one tray icon alive. A second launch (from the Start menu, or from
-/// the "start with Windows" entry after a manual start) signals the running instance
-/// to show its dashboard and then exits.
-/// </summary>
-public sealed class SingleInstance : IDisposable
+namespace CreditPincher.App.Platform
 {
-    private const string MutexName = @"Local\CreditPincher.SingleInstance";
-    private const string SignalName = @"Local\CreditPincher.ShowDashboard";
-
-    private readonly Mutex _mutex;
-    private readonly EventWaitHandle _signal;
-    private readonly CancellationTokenSource _cancellation = new();
-    private Thread? _listener;
-
-    public SingleInstance()
+    /// <summary>
+    /// Keeps exactly one tray icon alive. A second launch (from the Start menu, or from
+    /// the "start with Windows" entry after a manual start) signals the running instance
+    /// to show its dashboard and then exits.
+    /// </summary>
+    public sealed class SingleInstance : IDisposable
     {
-        _mutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
-        IsFirstInstance = createdNew;
-        _signal = new EventWaitHandle(false, EventResetMode.AutoReset, SignalName, out _);
-    }
+        private const string MutexName = @"Local\CreditPincher.SingleInstance";
+        private const string SignalName = @"Local\CreditPincher.ShowDashboard";
 
-    /// <summary>Raised on a background thread when another launch asks us to surface.</summary>
-    public event Action? ShowRequested;
+        private readonly Mutex _mutex;
+        private readonly EventWaitHandle _signal;
+        private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+        private Thread _listener;
 
-    public bool IsFirstInstance { get; }
-
-    /// <summary>Asks the already-running instance to open its dashboard.</summary>
-    public void SignalExistingInstance() => _signal.Set();
-
-    public void StartListening()
-    {
-        if (!IsFirstInstance || _listener is not null)
+        public SingleInstance()
         {
-            return;
+            bool createdNew;
+            _mutex = new Mutex(true, MutexName, out createdNew);
+            IsFirstInstance = createdNew;
+
+            bool signalCreated;
+            _signal = new EventWaitHandle(false, EventResetMode.AutoReset, SignalName, out signalCreated);
         }
 
-        _listener = new Thread(() =>
+        /// <summary>Raised on a background thread when another launch asks us to surface.</summary>
+        public event Action ShowRequested;
+
+        public bool IsFirstInstance { get; private set; }
+
+        /// <summary>Asks the already-running instance to open its dashboard.</summary>
+        public void SignalExistingInstance()
         {
-            var handles = new WaitHandle[] { _signal, _cancellation.Token.WaitHandle };
-            while (!_cancellation.IsCancellationRequested)
+            _signal.Set();
+        }
+
+        public void StartListening()
+        {
+            if (!IsFirstInstance || _listener != null)
             {
-                if (WaitHandle.WaitAny(handles) == 0)
+                return;
+            }
+
+            _listener = new Thread(() =>
+            {
+                var handles = new WaitHandle[] { _signal, _cancellation.Token.WaitHandle };
+                while (!_cancellation.IsCancellationRequested)
                 {
-                    ShowRequested?.Invoke();
+                    if (WaitHandle.WaitAny(handles) == 0)
+                    {
+                        var handler = ShowRequested;
+                        if (handler != null)
+                        {
+                            handler();
+                        }
+                    }
+                }
+            })
+            {
+                IsBackground = true,
+                Name = "CreditPincher single-instance listener",
+            };
+
+            _listener.Start();
+        }
+
+        public void Dispose()
+        {
+            _cancellation.Cancel();
+
+            if (IsFirstInstance)
+            {
+                try
+                {
+                    _mutex.ReleaseMutex();
+                }
+                catch (ApplicationException)
+                {
+                    // Already released, or never owned; nothing to clean up.
                 }
             }
-        })
-        {
-            IsBackground = true,
-            Name = "CreditPincher single-instance listener",
-        };
 
-        _listener.Start();
-    }
-
-    public void Dispose()
-    {
-        _cancellation.Cancel();
-
-        if (IsFirstInstance)
-        {
-            try
-            {
-                _mutex.ReleaseMutex();
-            }
-            catch (ApplicationException)
-            {
-                // Already released, or never owned; nothing to clean up.
-            }
+            _mutex.Dispose();
+            _signal.Dispose();
+            _cancellation.Dispose();
         }
-
-        _mutex.Dispose();
-        _signal.Dispose();
-        _cancellation.Dispose();
     }
 }

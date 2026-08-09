@@ -345,6 +345,16 @@
 
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Appearance" />
+                            <StackPanel x:Name="ThemePanel" Orientation="Horizontal" />
+                            <TextBlock Style="{StaticResource SubtleText}"
+                                       Margin="0,10,0,0"
+                                       Text="Applies immediately and is remembered per machine." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
                             <TextBlock Style="{StaticResource HeadingText}" Text="Display" />
                             <CheckBox x:Name="ShowDollarsCheck" Content="Show amounts in dollars" />
                             <StackPanel Orientation="Horizontal" Margin="22,0,0,8">

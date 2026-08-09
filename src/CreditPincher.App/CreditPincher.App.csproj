@@ -1,50 +1,124 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A deliberately old-style project file.
+
+  SDK-style projects (<Project Sdk="Microsoft.NET.Sdk">) need the .NET SDK installed.
+  This one is built by the MSBuild 4.0 and C# compiler that ship inside every Windows
+  install, under %WINDIR%\Microsoft.NET\Framework64\v4.0.30319 — so the app can be
+  built on a bare machine with nothing added, including a locked-down LTSC image.
+
+  CreditPincher.Core has no project file of its own any more: its sources are compiled
+  straight into this assembly, so the build produces one self-contained
+  CreditPincher.exe with no DLLs beside it.
+-->
+<Project ToolsVersion="4.0" DefaultTargets="Build"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
     <RootNamespace>CreditPincher.App</RootNamespace>
     <AssemblyName>CreditPincher</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Product>CreditPincher</Product>
-    <Company>CreditPincher</Company>
-    <Version>1.0.0</Version>
-    <!-- The tray app is single-file published; trimming is off because WPF does not trim well. -->
-    <PublishTrimmed>false</PublishTrimmed>
-    <SelfContained>false</SelfContained>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <PlatformTarget>x64</PlatformTarget>
-    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <WarningLevel>4</WarningLevel>
     <!--
-      WFAC010 tells WinForms apps to move DPI settings out of the manifest. This is a WPF
-      app that only borrows WinForms for the tray icon, and WPF reads its DPI awareness
-      from the manifest, so the manifest is the correct home for those settings here.
+      Expect MSB3644 during the build: a bare Windows install has no targeting packs,
+      so MSBuild resolves references from the GAC instead. That is what we want here,
+      and MSBuild 4.0 has no way to silence it (NoWarn only reaches the C# compiler).
     -->
-    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <Optimize>false</Optimize>
+    <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <!--
-      WinForms is here only for the notification-area icon. Its implicit usings collide
-      with WPF on Application/Brush/Point/Size/KeyEventArgs, so the two WinForms
-      namespaces are imported explicitly (or via the `Forms` alias) where they are used.
-    -->
-    <Using Remove="System.Windows.Forms" />
-    <Using Remove="System.Drawing" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <!-- WinForms is here only for the notification-area icon and its menu. -->
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CreditPincher.Core\CreditPincher.Core.csproj" />
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Page Include="Views\DashboardWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\QuickLogWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ConflictWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\DashboardWindow.xaml.cs">
+      <DependentUpon>Views\DashboardWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\QuickLogWindow.xaml.cs">
+      <DependentUpon>Views\QuickLogWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\ConflictWindow.xaml.cs">
+      <DependentUpon>Views\ConflictWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="AppServices.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Controls\UsageBarChart.cs" />
+    <Compile Include="Platform\HotKeyManager.cs" />
+    <Compile Include="Platform\SingleInstance.cs" />
+    <Compile Include="Platform\StartupManager.cs" />
+    <Compile Include="Services\WpfGitConflictResolver.cs" />
+    <Compile Include="Theming\ThemeManager.cs" />
+    <Compile Include="Theming\ThemePalette.cs" />
+    <Compile Include="Theming\TitleBarTheme.cs" />
+    <Compile Include="Tray\TrayController.cs" />
+    <Compile Include="Tray\TrayIconRenderer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Core is compiled in rather than referenced, so the output is a single file. -->
+    <Compile Include="..\CreditPincher.Core\**\*.cs">
+      <Link>Core\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

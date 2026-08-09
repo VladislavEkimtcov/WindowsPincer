@@ -40,21 +40,37 @@ Per-machine preferences live separately, in
 
 ## Running it
 
-Requirements: Windows 10 (x64) and the
-[.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) — or use a
-self-contained build, which needs nothing installed. Git is optional and only needed for
-backups.
+Requirements: Windows 10 or 11 (x64). Nothing else — no runtime, no SDK, no installer.
+Git is optional and only needed for backups.
 
 ```powershell
 .\build.ps1
 ```
 
-That runs the tests and publishes a single `dist\CreditPincher.exe`. Copy that one file
-anywhere and run it. To bundle the runtime as well:
+That runs the tests and produces a single `dist\CreditPincher.exe` of about 140 KB.
+Copy that one file anywhere and run it.
 
-```powershell
-.\build.ps1 -SelfContained
-```
+### The build needs nothing installed
+
+Everything is compiled by the tools that already live inside Windows, under
+`%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`:
+
+- `MSBuild.exe` (with `Microsoft.WinFx.targets`) compiles the XAML and the app,
+- `csc.exe` compiles the test suite,
+- the output targets **.NET Framework 4.8**, which ships with every Windows 10/11 install.
+
+This is deliberate. The app was originally written on macOS against .NET 8 and an
+SDK-style project, which cannot be built — or run — on a machine without the .NET SDK
+installed. Locked-down and industrial Windows images routinely have neither the SDK
+nor a package manager to fetch one, so the project was moved onto the in-box
+toolchain instead. Two consequences worth knowing:
+
+- **The source is C# 5.** That is the newest language version the in-box compiler
+  accepts. The .NET-8-only pieces the code relied on (`DateOnly`, `TimeProvider`,
+  `System.Text.Json`, `Math.Clamp`, `MaxBy`, …) are reimplemented in
+  `src/CreditPincher.Core/Compat/`.
+- **`MSB3644` during the build is expected.** Without the .NET SDK there are no
+  targeting packs, so MSBuild resolves references from the GAC. The build is fine.
 
 There is no installer and nothing is written outside your user profile. "Start with
 Windows" (tray menu, or Settings) is a per-user `Run` registry value, so it never needs
@@ -82,22 +98,30 @@ The dashboard has four tabs:
 ## Layout
 
 ```
-src/CreditPincher.Core/     Platform-agnostic logic; no UI, no Windows APIs
+src/CreditPincher.Core/     Logic only; no UI
     Models/                 CreditUsageEntry, UsageStats, YearMonth
     Services/               Storage, statistics, formatting, git, budget alerts, settings
-src/CreditPincher.App/      WPF + tray shell (Windows only)
+    Compat/                 Stand-ins for .NET 8 types absent from .NET Framework 4.8
+src/CreditPincher.App/      WPF + tray shell, and the only project file in the repo
     Tray/                   Notification-area icon, menu, balloons, auto-backup
     Views/                  Dashboard, quick-log box, conflict resolver
     Controls/               UsageBarChart
     Platform/               Single instance, Run-key startup, global hotkey
-tests/CreditPincher.Tests/  xUnit tests over Core
+tests/CreditPincher.Tests/  Tests over Core, plus a ~150-line xUnit stand-in
 ```
 
-Everything worth testing lives in `CreditPincher.Core`, which targets plain `net8.0` — so
-the test suite builds and runs on any OS, not just Windows:
+`CreditPincher.Core` has no project file: its sources are compiled directly into both
+the app and the test runner. That is what keeps the shipped product a single
+dependency-free executable.
+
+The tests keep their original `[Fact]` / `[Theory]` / `Assert` shape. xUnit itself
+arrives through NuGet, which a machine without the .NET SDK cannot use, so
+`tests/CreditPincher.Tests/MiniXunit.cs` reimplements the handful of attributes and
+assertions the suite needs and runs them as a console executable:
 
 ```powershell
-dotnet test
+.\build.ps1                 # compiles and runs the tests, then builds the app
+tests\CreditPincher.Tests\bin\CreditPincher.Tests.exe   # just the tests
 ```
 
 ## Differences from the IDE plugin
@@ -110,3 +134,26 @@ dotnet test
 | Backup | Manual button | Manual button plus an optional timer |
 | Dollar conversion | Fixed at 100 credits = $1 | Configurable rate |
 | History | Last 10 entries, read-only | Full list, deletable |
+
+## Installing
+
+There is nothing to install, but the tidy place for the executable is:
+
+```powershell
+$dir = "$env:LOCALAPPDATA\Programs\CreditPincher"
+New-Item -ItemType Directory -Force $dir | Out-Null
+Copy-Item dist\CreditPincher.exe $dir -Force
+& "$dir\CreditPincher.exe"
+```
+
+Then turn on *Start with Windows* from the tray menu. To do the same without opening
+the app (it writes exactly the value the tray menu would):
+
+```powershell
+Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
+    -Name CreditPincher `
+    -Value "`"$env:LOCALAPPDATA\Programs\CreditPincher\CreditPincher.exe`" --tray"
+```
+
+The `--tray` flag suppresses the dashboard at sign-in even when *Open the dashboard on
+startup* is enabled, so an auto-start is always silent.
