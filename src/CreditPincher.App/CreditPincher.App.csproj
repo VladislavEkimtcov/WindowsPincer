@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>CreditPincher.App</RootNamespace>
+    <AssemblyName>CreditPincher</AssemblyName>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>CreditPincher</Product>
+    <Company>CreditPincher</Company>
+    <Version>1.0.0</Version>
+    <!-- The tray app is single-file published; trimming is off because WPF does not trim well. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!--
+      WFAC010 tells WinForms apps to move DPI settings out of the manifest. This is a WPF
+      app that only borrows WinForms for the tray icon, and WPF reads its DPI awareness
+      from the manifest, so the manifest is the correct home for those settings here.
+    -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      WinForms is here only for the notification-area icon. Its implicit usings collide
+      with WPF on Application/Brush/Point/Size/KeyEventArgs, so the two WinForms
+      namespaces are imported explicitly (or via the `Forms` alias) where they are used.
+    -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CreditPincher.Core\CreditPincher.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,411 @@
+<Window x:Class="CreditPincher.App.Views.DashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:CreditPincher.App.Controls"
+        Title="CreditPincher"
+        Height="720"
+        Width="880"
+        MinHeight="560"
+        MinWidth="720"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBackgroundBrush}">
+
+    <TabControl x:Name="Tabs" Margin="10" Background="Transparent" BorderThickness="0">
+
+        <!-- ==================== Dashboard ==================== -->
+        <TabItem Header="Dashboard">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,12,10,0">
+                <StackPanel>
+
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Style="{StaticResource SubtleText}"
+                                       Text="This month" />
+
+                            <TextBlock x:Name="MonthTotalText"
+                                       Grid.Row="1" Grid.Column="0"
+                                       Style="{StaticResource BigNumberText}"
+                                       Text="—" />
+
+                            <Button x:Name="UnitToggleButton"
+                                    Grid.Row="1" Grid.Column="1"
+                                    VerticalAlignment="Bottom"
+                                    Content="Show in dollars"
+                                    MinWidth="130"
+                                    Click="OnToggleUnitClick" />
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
+                                <ProgressBar x:Name="BudgetProgress"
+                                             Height="8"
+                                             Minimum="0"
+                                             Maximum="100"
+                                             Foreground="{StaticResource AccentBrush}"
+                                             Background="{StaticResource AccentSoftBrush}"
+                                             BorderThickness="0" />
+                                <TextBlock x:Name="BudgetSummaryText"
+                                           Style="{StaticResource SubtleText}"
+                                           Margin="0,6,0,0"
+                                           Text="No monthly budget set." />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Log AI usage" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox x:Name="AmountBox"
+                                         Grid.Column="0"
+                                         Margin="0,0,8,0"
+                                         KeyDown="OnAmountKeyDown" />
+
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource AccentButton}"
+                                        Content="Log usage"
+                                        Click="OnLogUsageClick" />
+                            </Grid>
+                            <TextBlock Style="{StaticResource SubtleText}"
+                                       Margin="0,8,0,0"
+                                       Text="Entries are stamped with the current local date and time. Press Enter to submit." />
+                            <TextBlock x:Name="LogStatusText"
+                                       Style="{StaticResource SubtleText}"
+                                       Margin="0,4,0,0"
+                                       Foreground="{StaticResource AccentBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Date range" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="From" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <DatePicker x:Name="StartPicker" Width="130" SelectedDateChanged="OnRangeChanged" />
+                                <TextBlock Text="to" VerticalAlignment="Center" Margin="10,0,6,0" />
+                                <DatePicker x:Name="EndPicker" Width="130" SelectedDateChanged="OnRangeChanged" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="This month" Margin="0,0,8,0" Click="OnThisMonthClick" />
+                                <Button Content="Last 7 days" Margin="0,0,8,0" Click="OnLast7Click" />
+                                <Button Content="Last 30 days" Margin="0,0,8,0" Click="OnLast30Click" />
+                                <Button Content="This year" Click="OnThisYearClick" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Usage history" />
+                            <controls:UsageBarChart x:Name="Chart" Height="200" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Usage statistics" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource StatLabel}" Text="Range" />
+                                <TextBlock x:Name="RangeValue" Grid.Row="0" Grid.Column="1" Style="{StaticResource StatValue}" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource StatLabel}" Text="Total credits" />
+                                <TextBlock x:Name="TotalValue" Grid.Row="0" Grid.Column="3" Style="{StaticResource StatValue}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource StatLabel}" Text="Logged entries" />
+                                <TextBlock x:Name="EntryCountValue" Grid.Row="1" Grid.Column="1" Style="{StaticResource StatValue}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource StatLabel}" Text="Active days" />
+                                <TextBlock x:Name="ActiveDaysValue" Grid.Row="1" Grid.Column="3" Style="{StaticResource StatValue}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource StatLabel}" Text="Average / day" />
+                                <TextBlock x:Name="AveragePerDayValue" Grid.Row="2" Grid.Column="1" Style="{StaticResource StatValue}" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource StatLabel}" Text="Average / active day" />
+                                <TextBlock x:Name="AveragePerActiveDayValue" Grid.Row="2" Grid.Column="3" Style="{StaticResource StatValue}" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource StatLabel}" Text="Busiest day" />
+                                <TextBlock x:Name="BusiestDayValue" Grid.Row="3" Grid.Column="1" Style="{StaticResource StatValue}" />
+                                <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource StatLabel}" Text="Highest single entry" />
+                                <TextBlock x:Name="HighestEntryValue" Grid.Row="3" Grid.Column="3" Style="{StaticResource StatValue}" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource StatLabel}" Text="Monthly budget" />
+                                <TextBlock x:Name="BudgetValue" Grid.Row="4" Grid.Column="1" Style="{StaticResource StatValue}" />
+                                <TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource StatLabel}" Text="Budget in range" />
+                                <TextBlock x:Name="RangeBudgetValue" Grid.Row="4" Grid.Column="3" Style="{StaticResource StatValue}" />
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource StatLabel}" Text="Remaining in range" />
+                                <TextBlock x:Name="RemainingBudgetValue" Grid.Row="5" Grid.Column="1" Style="{StaticResource StatValue}" />
+                                <TextBlock Grid.Row="5" Grid.Column="2" Style="{StaticResource StatLabel}" Text="Projected month total" />
+                                <TextBlock x:Name="ProjectedMonthValue" Grid.Row="5" Grid.Column="3" Style="{StaticResource StatValue}" />
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource StatLabel}" Text="Budget runway" />
+                                <TextBlock x:Name="RunwayValue" Grid.Row="6" Grid.Column="1" Style="{StaticResource StatValue}" />
+                                <TextBlock Grid.Row="6" Grid.Column="2" Style="{StaticResource StatLabel}" Text="Last active day" />
+                                <TextBlock x:Name="LastEntryValue" Grid.Row="6" Grid.Column="3" Style="{StaticResource StatValue}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Monthly budget" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox x:Name="BudgetBox" Width="160" Margin="0,0,8,0" KeyDown="OnBudgetKeyDown" />
+                                <Button Content="Save budget" Margin="0,0,8,0" Click="OnSaveBudgetClick" />
+                                <Button Content="Clear" Click="OnClearBudgetClick" />
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource SubtleText}"
+                                       Margin="0,8,0,0"
+                                       Text="A self-imposed monthly cap, stored locally alongside your usage log." />
+                            <TextBlock x:Name="BudgetStatusText"
+                                       Style="{StaticResource SubtleText}"
+                                       Margin="0,4,0,0"
+                                       Foreground="{StaticResource AccentBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- ==================== History ==================== -->
+        <TabItem Header="History">
+            <Grid Margin="10,12,10,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                    <CheckBox x:Name="OnlyRangeCheck"
+                              Content="Only show the selected date range"
+                              IsChecked="True"
+                              Margin="0,0,16,0"
+                              VerticalAlignment="Center"
+                              Checked="OnHistoryFilterChanged"
+                              Unchecked="OnHistoryFilterChanged" />
+                    <TextBlock x:Name="HistoryCountText"
+                               Style="{StaticResource SubtleText}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <ListView x:Name="EntriesList"
+                          Grid.Row="1"
+                          BorderBrush="{StaticResource LineBrush}"
+                          FontFamily="Segoe UI"
+                          FontSize="13">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="When" Width="200" DisplayMemberBinding="{Binding When}" />
+                            <GridViewColumn Header="Amount" Width="160" DisplayMemberBinding="{Binding Amount}" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                    <TextBlock x:Name="HistoryStatusText"
+                               Style="{StaticResource SubtleText}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,12,0" />
+                    <Button Content="Delete selected" Click="OnDeleteEntryClick" />
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- ==================== Backup ==================== -->
+        <TabItem Header="Backup">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,12,10,0">
+                <StackPanel>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Storage" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="StoragePathBox"
+                                         Grid.Column="0"
+                                         Margin="0,0,8,0"
+                                         IsReadOnly="True" />
+                                <Button Grid.Column="1" Content="Open folder" Click="OnOpenFolderClick" />
+                            </Grid>
+                            <TextBlock Style="{StaticResource SubtleText}"
+                                       Margin="0,8,0,0"
+                                       Text="Plain text files: usage-log.csv and monthly-budget.txt. The JetBrains plugin reads and writes the very same folder." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Git backup" />
+                            <TextBlock x:Name="GitStatusText"
+                                       Style="{StaticResource SubtleText}"
+                                       Margin="0,0,0,10"
+                                       Text="Checking git status…" />
+
+                            <StackPanel x:Name="GitConnectPanel" Visibility="Collapsed">
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="Remote URL"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0" />
+                                    <TextBox x:Name="RemoteUrlBox" Grid.Column="1" />
+                                </Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="ConnectButton"
+                                            Style="{StaticResource AccentButton}"
+                                            Content="Connect and push"
+                                            MinWidth="150"
+                                            Click="OnConnectGitClick" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource SubtleText}"
+                                           Margin="0,8,0,0"
+                                           Text="Creates a repository in the storage folder, links it to this remote, and pushes an initial commit." />
+                            </StackPanel>
+
+                            <StackPanel x:Name="GitBackupPanel" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button x:Name="BackupButton"
+                                            Style="{StaticResource AccentButton}"
+                                            Content="Commit and push"
+                                            MinWidth="150"
+                                            Margin="0,0,8,0"
+                                            Click="OnBackupClick" />
+                                    <Button x:Name="PullButton"
+                                            Content="Pull from remote"
+                                            MinWidth="150"
+                                            Click="OnPullClick" />
+                                </StackPanel>
+                                <CheckBox x:Name="AutoBackupCheck"
+                                          Content="Back up automatically"
+                                          Checked="OnAutoBackupChanged"
+                                          Unchecked="OnAutoBackupChanged" />
+                                <StackPanel Orientation="Horizontal" Margin="22,0,0,8">
+                                    <TextBlock Text="every" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <TextBox x:Name="AutoBackupIntervalBox" Width="60" Margin="0,0,6,0" />
+                                    <TextBlock Text="minutes" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                    <Button Content="Apply" MinWidth="70" Click="OnApplyAutoBackupClick" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <TextBox x:Name="GitOutputBox"
+                                     Margin="0,8,0,0"
+                                     Height="150"
+                                     IsReadOnly="True"
+                                     FontFamily="Consolas"
+                                     FontSize="12"
+                                     TextWrapping="NoWrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     HorizontalScrollBarVisibility="Auto" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- ==================== Settings ==================== -->
+        <TabItem Header="Settings">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,12,10,0">
+                <StackPanel>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Display" />
+                            <CheckBox x:Name="ShowDollarsCheck" Content="Show amounts in dollars" />
+                            <StackPanel Orientation="Horizontal" Margin="22,0,0,8">
+                                <TextBlock Text="Credits per dollar" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBox x:Name="CreditsPerDollarBox" Width="90" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Windows" />
+                            <CheckBox x:Name="StartWithWindowsCheck" Content="Start CreditPincher when I sign in" />
+                            <CheckBox x:Name="ShowDashboardOnStartupCheck" Content="Open the dashboard on startup" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Notifications" />
+                            <CheckBox x:Name="NotifyCheck" Content="Notify me as I burn through the monthly budget" />
+                            <StackPanel Orientation="Horizontal" Margin="22,0,0,8">
+                                <TextBlock Text="Thresholds (%)" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBox x:Name="ThresholdsBox" Width="140" />
+                                <TextBlock Style="{StaticResource SubtleText}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0"
+                                           Text="comma separated, e.g. 80, 100" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource HeadingText}" Text="Quick-log hotkey" />
+                            <CheckBox x:Name="HotkeyCheck" Content="Register a system-wide shortcut" />
+                            <StackPanel Orientation="Horizontal" Margin="22,0,0,8">
+                                <TextBox x:Name="HotkeyModifiersBox" Width="110" Margin="0,0,6,0" />
+                                <TextBlock Text="+" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBox x:Name="HotkeyKeyBox" Width="60" />
+                            </StackPanel>
+                            <TextBlock x:Name="HotkeyStatusText"
+                                       Style="{StaticResource SubtleText}"
+                                       Margin="22,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <Button Style="{StaticResource AccentButton}"
+                                Content="Save settings"
+                                MinWidth="130"
+                                Margin="0,0,8,0"
+                                Click="OnSaveSettingsClick" />
+                        <TextBlock x:Name="SettingsStatusText"
+                                   Style="{StaticResource SubtleText}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+
+    </TabControl>
+</Window>
