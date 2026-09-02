@@ -1,0 +1,48 @@
+name: Build, test, and release
+
+# Runs on every push/PR so main always stays green, and additionally publishes a
+# GitHub Release with the built CreditPincher.exe attached whenever a v*.*.* tag is
+# pushed. This project targets the in-box .NET Framework 4 toolchain (see build.ps1
+# and README.md), which only exists on Windows, so windows-latest is required —
+# there is no macOS/Linux equivalent to build or run this on.
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and test
+        shell: pwsh
+        run: .\build.ps1
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CreditPincher
+          path: dist/CreditPincher.exe
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release create $tag "dist/CreditPincher.exe" `
+            --repo "${{ github.repository }}" `
+            --title "CreditPincher $tag" `
+            --generate-notes
+

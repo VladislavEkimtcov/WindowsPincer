@@ -1,0 +1,13 @@
+# Build output
+dist/
+bin/
+obj/
+*.suo
+*.user
+
+# JetBrains IDE
+.idea/
+
+# OS cruft
+.DS_Store
+

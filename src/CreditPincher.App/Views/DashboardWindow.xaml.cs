@@ -555,6 +555,39 @@ namespace CreditPincher.App.Views
                                  _services.Settings.AutoBackupIntervalMinutes + " minutes.";
         }
 
+        private void OnAutoPullChanged(object sender, RoutedEventArgs e)
+        {
+            if (!_loaded)
+            {
+                return;
+            }
+
+            _services.Settings.AutoPullEnabled = AutoPullCheck.IsChecked == true;
+            _services.SettingsStore.Save(_services.Settings);
+            _tray.ApplyAutoPullSettings();
+        }
+
+        private void OnApplyAutoPullClick(object sender, RoutedEventArgs e)
+        {
+            int minutes;
+            if (int.TryParse(AutoPullIntervalBox.Text.Trim(), out minutes) && minutes >= 5)
+            {
+                _services.Settings.AutoPullIntervalMinutes = Math.Min(minutes, 24 * 60);
+            }
+            else
+            {
+                GitStatusText.Text = "Enter an interval of at least 5 minutes.";
+                return;
+            }
+
+            AutoPullIntervalBox.Text =
+                _services.Settings.AutoPullIntervalMinutes.ToString(CultureInfo.CurrentCulture);
+            _services.SettingsStore.Save(_services.Settings);
+            _tray.ApplyAutoPullSettings();
+            GitStatusText.Text = "Automatic pulls every " +
+                                 _services.Settings.AutoPullIntervalMinutes + " minutes.";
+        }
+
         private void SetGitButtonsEnabled(bool enabled)
         {
             ConnectButton.IsEnabled = enabled;
@@ -694,6 +727,8 @@ namespace CreditPincher.App.Views
             HotkeyKeyBox.Text = settings.QuickLogHotkeyKey;
             AutoBackupCheck.IsChecked = settings.AutoBackupEnabled;
             AutoBackupIntervalBox.Text = settings.AutoBackupIntervalMinutes.ToString(CultureInfo.CurrentCulture);
+            AutoPullCheck.IsChecked = settings.AutoPullEnabled;
+            AutoPullIntervalBox.Text = settings.AutoPullIntervalMinutes.ToString(CultureInfo.CurrentCulture);
 
             UpdateHotkeyStatus();
         }

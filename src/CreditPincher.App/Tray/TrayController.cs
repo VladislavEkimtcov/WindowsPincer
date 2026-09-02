@@ -25,15 +25,17 @@ namespace CreditPincher.App.Tray
         private readonly HotKeyManager _hotKeys = new HotKeyManager();
         private readonly Forms.NotifyIcon _notifyIcon;
         private readonly Forms.ToolStripMenuItem _backupItem;
+        private readonly Forms.ToolStripMenuItem _pullItem;
         private readonly Forms.ToolStripMenuItem _startupItem;
         private readonly DispatcherTimer _refreshTimer;
         private readonly DispatcherTimer _autoBackupTimer;
+        private readonly DispatcherTimer _autoPullTimer;
         private readonly EventHandler _themeChangedHandler;
 
         private DashboardWindow _dashboard;
         private QuickLogWindow _quickLog;
         private IntPtr _currentIconHandle;
-        private bool _backupInProgress;
+        private bool _gitSyncInProgress;
         private bool _disposed;
 
         public TrayController(AppServices services)
@@ -41,6 +43,7 @@ namespace CreditPincher.App.Tray
             _services = services;
 
             _backupItem = new Forms.ToolStripMenuItem("&Back up now", null, (sender, args) => BackupNow());
+            _pullItem = new Forms.ToolStripMenuItem("Pull from remote &now", null, (sender, args) => PullNow());
             _startupItem = new Forms.ToolStripMenuItem("Start with &Windows", null, (sender, args) => ToggleStartup())
             {
                 CheckOnClick = false,
@@ -56,6 +59,7 @@ namespace CreditPincher.App.Tray
             menu.Items.Add(new Forms.ToolStripMenuItem("Open &dashboard", null, (sender, args) => ShowDashboard()));
             menu.Items.Add(new Forms.ToolStripSeparator());
             menu.Items.Add(_backupItem);
+            menu.Items.Add(_pullItem);
             menu.Items.Add(new Forms.ToolStripMenuItem("Open storage &folder", null, (sender, args) => OpenStorageFolder()));
             menu.Items.Add(new Forms.ToolStripSeparator());
             menu.Items.Add(_startupItem);
@@ -94,6 +98,10 @@ namespace CreditPincher.App.Tray
             _autoBackupTimer = new DispatcherTimer(DispatcherPriority.Background);
             _autoBackupTimer.Tick += (sender, args) => BackupNow(true);
             ApplyAutoBackupSettings();
+
+            _autoPullTimer = new DispatcherTimer(DispatcherPriority.Background);
+            _autoPullTimer.Tick += (sender, args) => PullNow(true);
+            ApplyAutoPullSettings();
 
             ApplyHotKeySettings();
             _hotKeys.Pressed += ShowQuickLog;
@@ -144,14 +152,15 @@ namespace CreditPincher.App.Tray
         /// <summary>Commits and pushes the storage directory, reporting through the tray.</summary>
         public void BackupNow(bool silent)
         {
-            if (_backupInProgress)
+            if (_gitSyncInProgress)
             {
                 return;
             }
 
             var git = _services.Git;
-            _backupInProgress = true;
+            _gitSyncInProgress = true;
             _backupItem.Enabled = false;
+            _pullItem.Enabled = false;
 
             Task.Factory.StartNew(() =>
             {
@@ -165,8 +174,9 @@ namespace CreditPincher.App.Tray
             }).ContinueWith(
                 task =>
                 {
-                    _backupInProgress = false;
+                    _gitSyncInProgress = false;
                     _backupItem.Enabled = true;
+                    _pullItem.Enabled = true;
 
                     var result = task.IsFaulted
                         ? new GitBackupService.GitResult(false, DescribeFault(task))
@@ -192,6 +202,71 @@ namespace CreditPincher.App.Tray
                     else if (!silent)
                     {
                         ShowBalloon("Backup failed", FirstLine(result.Output), Forms.ToolTipIcon.Error);
+                    }
+
+                    _services.RaiseDataChanged();
+                },
+                TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        public void PullNow()
+        {
+            PullNow(false);
+        }
+
+        /// <summary>Pulls the storage directory from the remote, reporting through the tray.</summary>
+        public void PullNow(bool silent)
+        {
+            if (_gitSyncInProgress)
+            {
+                return;
+            }
+
+            var git = _services.Git;
+            _gitSyncInProgress = true;
+            _backupItem.Enabled = false;
+            _pullItem.Enabled = false;
+
+            Task.Factory.StartNew(() =>
+            {
+                if (!git.IsGitRepository())
+                {
+                    return new GitBackupService.GitResult(
+                        false, "The storage folder is not connected to a git remote yet.");
+                }
+
+                return git.Pull();
+            }).ContinueWith(
+                task =>
+                {
+                    _gitSyncInProgress = false;
+                    _backupItem.Enabled = true;
+                    _pullItem.Enabled = true;
+
+                    var result = task.IsFaulted
+                        ? new GitBackupService.GitResult(false, DescribeFault(task))
+                        : task.Result;
+
+                    if (result.Success)
+                    {
+                        if (!silent)
+                        {
+                            ShowBalloon(
+                                "Pull complete",
+                                "Your usage log is up to date with the remote repository.",
+                                Forms.ToolTipIcon.Info);
+                        }
+                    }
+                    else if (result.Conflict)
+                    {
+                        ShowBalloon(
+                            "Pull needs your input",
+                            "A merge conflict could not be resolved automatically. Open the dashboard to sort it out.",
+                            Forms.ToolTipIcon.Warning);
+                    }
+                    else if (!silent)
+                    {
+                        ShowBalloon("Pull failed", FirstLine(result.Output), Forms.ToolTipIcon.Error);
                     }
 
                     _services.RaiseDataChanged();
@@ -259,6 +334,21 @@ namespace CreditPincher.App.Tray
             _autoBackupTimer.Start();
         }
 
+        /// <summary>Applies the auto-pull interval after it changes in Settings.</summary>
+        public void ApplyAutoPullSettings()
+        {
+            _autoPullTimer.Stop();
+
+            if (!_services.Settings.AutoPullEnabled)
+            {
+                return;
+            }
+
+            var minutes = MathEx.Clamp(_services.Settings.AutoPullIntervalMinutes, 5, 24 * 60);
+            _autoPullTimer.Interval = TimeSpan.FromMinutes(minutes);
+            _autoPullTimer.Start();
+        }
+
         /// <summary>Applies the hotkey preference after it changes in Settings.</summary>
         public bool ApplyHotKeySettings()
         {
@@ -298,6 +388,7 @@ namespace CreditPincher.App.Tray
             ThemeManager.Changed -= _themeChangedHandler;
             _refreshTimer.Stop();
             _autoBackupTimer.Stop();
+            _autoPullTimer.Stop();
             _hotKeys.Dispose();
 
             _notifyIcon.Visible = false;

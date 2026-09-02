@@ -17,7 +17,8 @@ a tool window.
 - **Full dashboard on demand.** Date-range stats, a daily bar chart, editable history,
   and the budget — everything the IDE tool window showed.
 - **Backs up and syncs over git.** Commit and push the storage folder on demand or on a
-  timer; conflicts between two machines are merged entry-by-entry rather than
+  timer, and pull remote changes the same way, so usage logged on another machine shows
+  up here; conflicts between two machines are merged entry-by-entry rather than
   one side winning.
 
 ## Shared storage with the plugin
@@ -76,6 +77,21 @@ There is no installer and nothing is written outside your user profile. "Start w
 Windows" (tray menu, or Settings) is a per-user `Run` registry value, so it never needs
 administrator rights.
 
+### Continuous integration and releases
+
+`.github/workflows/build.yml` runs `build.ps1` (tests + build) on `windows-latest` for
+every push and pull request against `main` — GitHub's hosted runners are the only
+practical place to build this project, since the in-box .NET Framework 4 tools it
+relies on have no macOS/Linux equivalent. Pushing a tag matching `v*.*.*` additionally
+publishes a GitHub Release with `CreditPincher.exe` attached, via `gh release create`
+running inside the workflow:
+
+```bash
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+
 ## Using it
 
 | Action | How |
@@ -83,6 +99,7 @@ administrator rights.
 | Log usage | `Ctrl+Alt+U`, tray menu → *Log usage…*, or middle-click the tray icon |
 | Open the dashboard | Left-click or double-click the tray icon |
 | Back up now | Tray menu → *Back up now*, or the Backup tab |
+| Pull from remote now | Tray menu → *Pull from remote now*, or the Backup tab |
 | Quit | Tray menu → *Exit* |
 
 The dashboard has four tabs:
@@ -90,8 +107,8 @@ The dashboard has four tabs:
 - **Dashboard** — month total, budget progress, logging box, date range, chart, the full
   statistics table, and the monthly budget.
 - **History** — every entry, newest first, with delete.
-- **Backup** — storage path, git connect/commit/pull, automatic backup interval, and the
-  raw git output when something goes wrong.
+- **Backup** — storage path, git connect/commit/pull, automatic backup and pull
+  intervals, and the raw git output when something goes wrong.
 - **Settings** — credits vs dollars (and the conversion rate), start with Windows,
   notification thresholds, and the hotkey.
 
@@ -131,7 +148,7 @@ tests\CreditPincher.Tests\bin\CreditPincher.Tests.exe   # just the tests
 | Entry point | Tool window in the IDE | Notification area, always available |
 | Logging | Tool window text field | Global hotkey, tray menu, or dashboard |
 | Budget warnings | Read them in the panel | Balloon notifications as thresholds pass |
-| Backup | Manual button | Manual button plus an optional timer |
+| Backup | Manual button | Manual push/pull, each on an optional timer |
 | Dollar conversion | Fixed at 100 credits = $1 | Configurable rate |
 | History | Last 10 entries, read-only | Full list, deletable |
 

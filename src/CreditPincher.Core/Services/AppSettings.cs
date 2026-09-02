@@ -41,6 +41,11 @@ namespace CreditPincher.Core.Services
 
         public int AutoBackupIntervalMinutes { get; set; }
 
+        /// <summary>Pull from the remote automatically on the interval below.</summary>
+        public bool AutoPullEnabled { get; set; }
+
+        public int AutoPullIntervalMinutes { get; set; }
+
         /// <summary>Register a system-wide hotkey that opens the quick-log box.</summary>
         public bool QuickLogHotkeyEnabled { get; set; }
 
@@ -63,6 +68,7 @@ namespace CreditPincher.Core.Services
             Theme = "light";
             NotifyOnBudgetThresholds = true;
             AutoBackupIntervalMinutes = 60;
+            AutoPullIntervalMinutes = 60;
             QuickLogHotkeyEnabled = true;
             QuickLogHotkeyModifiers = "Ctrl+Alt";
             QuickLogHotkeyKey = "U";
@@ -159,6 +165,9 @@ namespace CreditPincher.Core.Services
             settings.AutoBackupEnabled = ReadBool(members, "AutoBackupEnabled", settings.AutoBackupEnabled);
             settings.AutoBackupIntervalMinutes =
                 ReadInt(members, "AutoBackupIntervalMinutes", settings.AutoBackupIntervalMinutes);
+            settings.AutoPullEnabled = ReadBool(members, "AutoPullEnabled", settings.AutoPullEnabled);
+            settings.AutoPullIntervalMinutes =
+                ReadInt(members, "AutoPullIntervalMinutes", settings.AutoPullIntervalMinutes);
             settings.QuickLogHotkeyEnabled = ReadBool(members, "QuickLogHotkeyEnabled", settings.QuickLogHotkeyEnabled);
             settings.QuickLogHotkeyModifiers =
                 ReadString(members, "QuickLogHotkeyModifiers", settings.QuickLogHotkeyModifiers);
@@ -204,6 +213,8 @@ namespace CreditPincher.Core.Services
                 Member("LastNotifiedMonth", settings.LastNotifiedMonth),
                 Member("AutoBackupEnabled", settings.AutoBackupEnabled),
                 Member("AutoBackupIntervalMinutes", settings.AutoBackupIntervalMinutes),
+                Member("AutoPullEnabled", settings.AutoPullEnabled),
+                Member("AutoPullIntervalMinutes", settings.AutoPullIntervalMinutes),
                 Member("QuickLogHotkeyEnabled", settings.QuickLogHotkeyEnabled),
                 Member("QuickLogHotkeyModifiers", settings.QuickLogHotkeyModifiers),
                 Member("QuickLogHotkeyKey", settings.QuickLogHotkeyKey),

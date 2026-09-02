@@ -320,6 +320,16 @@
                                     <TextBlock Text="minutes" VerticalAlignment="Center" Margin="0,0,10,0" />
                                     <Button Content="Apply" MinWidth="70" Click="OnApplyAutoBackupClick" />
                                 </StackPanel>
+                                <CheckBox x:Name="AutoPullCheck"
+                                          Content="Pull automatically"
+                                          Checked="OnAutoPullChanged"
+                                          Unchecked="OnAutoPullChanged" />
+                                <StackPanel Orientation="Horizontal" Margin="22,0,0,8">
+                                    <TextBlock Text="every" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <TextBox x:Name="AutoPullIntervalBox" Width="60" Margin="0,0,6,0" />
+                                    <TextBlock Text="minutes" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                    <Button Content="Apply" MinWidth="70" Click="OnApplyAutoPullClick" />
+                                </StackPanel>
                             </StackPanel>
 
                             <TextBox x:Name="GitOutputBox"
