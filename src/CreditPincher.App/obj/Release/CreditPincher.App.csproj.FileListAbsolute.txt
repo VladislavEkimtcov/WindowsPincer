@@ -1,0 +1,16 @@
+C:\Users\user\PhpstormProjects\WindowsPincer\dist\CreditPincher.exe
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\CreditPincher.App.csprojResolveAssemblyReference.cache
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\Views\QuickLogWindow.baml
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\Views\ConflictWindow.baml
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\App.baml
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\Views\DashboardWindow.g.cs
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\Views\QuickLogWindow.g.cs
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\Views\ConflictWindow.g.cs
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\App.g.cs
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\GeneratedInternalTypeHelper.g.cs
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\CreditPincher_MarkupCompile.cache
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\CreditPincher_MarkupCompile.lref
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\Views\DashboardWindow.baml
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\CreditPincher.g.resources
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\obj\Release\CreditPincher.exe
+C:\Users\user\PhpstormProjects\WindowsPincer\src\CreditPincher.App\bin\Release\CreditPincher.exe
